@@ -1,0 +1,29 @@
+{
+  "name": "brightcontext",
+  "description": "blazingly fast real-time data stream processing",
+  "license": "MIT",
+  "version": "1.8.0",
+  "url": "http://brightcontext.com/",
+  "author": {
+    "name": "BrightContext",
+    "email": "support@brightcontext.com",
+    "url": "http://www.brightcontext.com/about/contact"
+  },
+  "engines": [
+    "node >= 0.8.0"
+  ],
+  "main": "bcc_core.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brightcontext/node-sdk.git"
+  },
+  "dependencies": {
+    "ws": "~0.4.25"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-jshint": "~0.4.3",
+    "grunt-contrib-watch": "~0.3.1",
+    "grunt-contrib-nodeunit": "~0.1.2"
+  }
+}
