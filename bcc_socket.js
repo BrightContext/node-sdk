@@ -60,7 +60,7 @@ var belt = require('./bcc_utility.js');
     };
 
     this.send = function(message, writeCompletion) {
-      console.log('>> ' + message);
+      _log('>> ' + message);
       this._socket.send(message, writeCompletion);
     };
 

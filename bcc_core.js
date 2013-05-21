@@ -141,14 +141,15 @@ var belt = require('./bcc_utility.js');
     };
 
     this.send = function (message_payload, completion) {
-      var message_metadata = {
+      var prev, message_metadata = {
         feedKey: me.key(),
         writeKey: me.writeKey()
       };
 
+
       if (me.isActive()) {
-        // easy but slow object cloning
-        me.activeuser.previous_message = JSON.parse(JSON.stringify(message_payload));
+        // clone as previous message BEFORE calculating
+        prev = JSON.parse(JSON.stringify(message_payload));
 
         if (!me.activeuser.isRevoting()) {
           message_metadata.state = 'INITIAL';
@@ -157,6 +158,9 @@ var belt = require('./bcc_utility.js');
           message_metadata.state = 'UPDATE';
           message_payload = me.calculateMessageDeltas(message_payload);
         }
+
+        // save as previous message AFTER calculating
+        me.activeuser.previous_message = prev;
       }
 
       me.project.conn.createMessage(
