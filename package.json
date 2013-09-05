@@ -2,7 +2,7 @@
   "name": "brightcontext",
   "description": "blazingly fast real-time data stream processing",
   "license": "MIT",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "url": "http://brightcontext.com/",
   "author": {
     "name": "BrightContext",

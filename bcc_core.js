@@ -235,6 +235,40 @@ var belt = require('./bcc_utility.js');
       }
     };
 
+    this.open_connection = function (callback) {
+      if (me.conn.isOpen()) {
+        callback();
+      } else {
+        me.conn.open({
+          onopen: function(/* c */) {
+            callback();
+          },
+          onevent: function (c, e) {
+            me.dispatcher.dispatch(e);
+          },
+          onend: function (c, e) {
+            if (e) {
+              me.conn.forceShutdown(e);
+              callback(e);
+            }
+          }
+        });
+      }
+    };
+
+    this.connect_and_execute = function (handler, fn) {
+      me.queue_command(function () {
+        me.open_connection(function(connect_error) {
+          if (connect_error) {
+            me.dispatcher.notify(handler, 'onerror', [connect_error]);
+          } else {
+            fn();
+            me.do_next_command();
+          }
+        });
+      });
+    };
+
     this.do_next_command = function () {
       setTimeout(function () {
         var fn = me.action_queue.shift();
@@ -293,39 +327,25 @@ var belt = require('./bcc_utility.js');
             }
           }
         );
+      }
 
+      me.connect_and_execute(feed_description, open_feed);
+
+      return me;
+    };
+
+    this.data = function (storage_listener) {
+      if (!storage_listener || !storage_listener.name || !storage_listener.ondata) {
         return me;
       }
 
-      function open_connection (callback) {
-        if (me.conn.isOpen()) {
-          callback();
-        } else {
-          me.conn.open({
-            onopen: function(/* c */) {
-              callback();
-            },
-            onevent: function (c, e) {
-              me.dispatcher.dispatch(e);
-            },
-            onend: function (c, e) {
-              if (e) {
-                me.conn.forceShutdown(e);
-                callback(e);
-              }
-            }
-          });
-        }
-      }
+      me.connect_and_execute(storage_listener, function () {
+        me.conn.storageQuery(project_name, storage_listener, function (storage_query_response) {
 
-      me.queue_command(function () {
-        open_connection(function(connect_error) {
-          if (connect_error) {
-            me.dispatcher.notify(feed_description, 'onerror', [connect_error]);
-          } else {
-            open_feed();
-            me.do_next_command();
-          }
+          var event_handler = ('onerror' === storage_query_response.eventType) ?
+            'onerror' : 'ondata';
+          me.dispatcher.notify(storage_listener, event_handler, [storage_query_response.msg]);
+
         });
       });
 
@@ -485,6 +505,16 @@ var belt = require('./bcc_utility.js');
       }
 
       socket.send('GET', '/feed/message/history.json', query, callback);
+    };
+
+    this.storageQuery = function (project_name, storage_listener, callback) {
+      var query = {
+        project: project_name,
+        dataStoreName: storage_listener.name,
+        params: storage_listener.params || {}
+      };
+
+      socket.send('GET', '/storage/query.json', query, callback);
     };
 
     this.startHeartbeats = function () {
